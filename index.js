@@ -7,7 +7,6 @@ var http = require('http')
 var inherits = require('inherits')
 var peerid = require('bittorrent-peerid')
 var series = require('run-series')
-var string2compact = require('string2compact')
 var WebSocketServer = require('uws').Server
 
 var common = require('./lib/common')
@@ -39,7 +38,7 @@ function Server (opts) {
 
   self.intervalMs = opts.interval
     ? opts.interval
-    : 10 * 60 * 1000 // 10 min
+    : 2 * 60 * 1000 // 2 min
 
   self._trustProxy = !!opts.trustProxy
   if (typeof opts.filter === 'function') self._filter = opts.filter
@@ -353,9 +352,6 @@ Server.prototype._onWebSocketRequest = function (socket, opts, params) {
       }
 
       response.info_hash = common.hexToBinary(params.info_hash)
-
-      // WebSocket tracker should have a shorter interval – default: 2 minutes
-      response.interval = Math.ceil(self.intervalMs / 1000 / 5)
     }
 
     socket.send(JSON.stringify(response), socket.onSend)
@@ -469,32 +465,6 @@ Server.prototype._onAnnounce = function (params, cb) {
 
       if (!response.action) response.action = common.ACTIONS.ANNOUNCE
       if (!response.interval) response.interval = Math.ceil(self.intervalMs / 1000)
-
-      if (params.compact === 1) {
-        var peers = response.peers
-
-        // Find IPv4 peers
-        response.peers = string2compact(peers.filter(function (peer) {
-          return common.IPV4_RE.test(peer.ip)
-        }).map(function (peer) {
-          return peer.ip + ':' + peer.port
-        }))
-        // Find IPv6 peers
-        response.peers6 = string2compact(peers.filter(function (peer) {
-          return common.IPV6_RE.test(peer.ip)
-        }).map(function (peer) {
-          return '[' + peer.ip + ']:' + peer.port
-        }))
-      } else if (params.compact === 0) {
-        // IPv6 peers are not separate for non-compact responses
-        response.peers = response.peers.map(function (peer) {
-          return {
-            'peer id': common.hexToBinary(peer.peerId),
-            ip: peer.ip,
-            port: peer.port
-          }
-        })
-      } // else, return full peer objects (used for websocket responses)
 
       cb(null, response)
     })

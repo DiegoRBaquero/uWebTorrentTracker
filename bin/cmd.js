@@ -41,7 +41,7 @@ if (argv.help) {
   Options:
     -p, --port [number]           change the port [default: 8000]
         --trust-proxy             trust 'x-forwarded-for' header from reverse proxy
-        --interval                client announce interval (ms) [default: 600000]
+        --interval                client announce interval (ms) [default: 120000]
         --stats                   enable web-based statistics (default: true)
     -q, --quiet                   only show error output
     -s, --silent                  show no output

@@ -127,7 +127,7 @@ $ webtorrent-tracker --help
   Options:
     -p, --port [number]  change the port [default: 8000]
         --trust-proxy    trust 'x-forwarded-for' and 'x-real-ip' headers from reverse proxy
-        --interval       client announce interval (ms) [default: 600000]
+        --interval       client announce interval (ms) [default: 120000]
     -q, --quiet          only show error output
     -s, --silent         show no output
     -v, --version        print the current version
