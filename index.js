@@ -531,11 +531,15 @@ Server.prototype._onWebSocketClose = function (socket) {
     socket.infoHashes.forEach(function (infoHash) {
       var swarm = self.torrents[infoHash]
       if (swarm) {
-        swarm.announce({
-          event: 'stopped',
-          numwant: 0,
-          peer_id: socket.peerId
-        }, noop)
+        if (swarm.peers.length <= 1) {
+          self.torrents[infoHash] = null // Clear memory if the swarm was or will be empty
+        } else {
+          swarm.announce({
+            event: 'stopped',
+            numwant: 0,
+            peer_id: socket.peerId
+          }, noop)
+        }
       }
     })
   }
