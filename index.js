@@ -135,6 +135,7 @@ function Server (opts) {
 
       if (req.method === 'GET' && (req.url === '/stats' || req.url === '/stats.json')) {
         infoHashes.forEach(function (infoHash) {
+          if (self.torrents[infoHash] === null) return // Pruned torrent with no peers
           var peers = self.torrents[infoHash].peers
           var keys = peers.keys
           if (keys.length > 0) activeTorrents++
