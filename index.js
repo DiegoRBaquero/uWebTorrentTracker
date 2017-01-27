@@ -135,7 +135,6 @@ function Server (opts) {
 
       if (req.method === 'GET' && (req.url === '/stats' || req.url === '/stats.json')) {
         infoHashes.forEach(function (infoHash) {
-          if (self.torrents[infoHash] === null) return // Pruned torrent with no peers
           var peers = self.torrents[infoHash].peers
           var keys = peers.keys
           if (keys.length > 0) activeTorrents++
@@ -285,7 +284,7 @@ Server.prototype.onWebSocketConnection = function (socket, opts) {
   opts.trustProxy = opts.trustProxy || self._trustProxy
 
   socket.headers = socket.upgradeReq.headers
-  socket.realIPAddress = opts.trustProxy ? socket.headers['x-forwarded-for'] || socket.headers['x-real-ip'] || socket._socket.remoteAddress : socket._socket.remoteAddress.replace(common.REMOVE_IPV4_MAPPED_IPV6_RE, '') // force ipv4
+  socket.realIPAddress = opts.trustProxy ? socket.headers['x-forwarded-for'] || socket._socket.remoteAddress : socket._socket.remoteAddress.replace(common.REMOVE_IPV4_MAPPED_IPV6_RE, '') // force ipv4
   socket.port = socket._socket.remotePort
 
   socket.peerId = null // as hex
@@ -533,7 +532,7 @@ Server.prototype._onWebSocketClose = function (socket) {
       var swarm = self.torrents[infoHash]
       if (swarm) {
         if (swarm.peers.length <= 1) {
-          self.torrents[infoHash] = null // Clear memory if the swarm was or will be empty
+          delete self.torrents[infoHash] // Clear memory if the swarm was or will be empty
         } else {
           swarm.announce({
             event: 'stopped',
