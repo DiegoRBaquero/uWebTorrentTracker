@@ -21,7 +21,7 @@ This module is used by [βTorrent Tracker](https://tracker.btorrent.xyz), the fi
 - Supports ipv4 & ipv6
 - Supports tracker "scrape" extension
 - Robust and well-tested
-  - Comprehensive test suite (runs entirely offline, so it's reliable)
+- Comprehensive test suite (runs entirely offline, so it's reliable)
 - Tracker statistics available via web interface at `/stats` or JSON data at `/stats.json`
 
 ## install
@@ -126,7 +126,7 @@ $ webtorrent-tracker --help
 
   Options:
     -p, --port [number]  change the port [default: 8000]
-        --trust-proxy    trust 'x-forwarded-for' and 'x-real-ip' headers from reverse proxy
+        --trust-proxy    trust 'x-forwarded-for' header from reverse proxy
         --interval       client announce interval (ms) [default: 120000]
     -q, --quiet          only show error output
     -s, --silent         show no output
