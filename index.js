@@ -260,22 +260,23 @@ Server.prototype.close = function (cb) {
 }
 
 Server.prototype.createSwarm = function (infoHash, cb) {
-  var self = this
   if (Buffer.isBuffer(infoHash)) infoHash = infoHash.toString('hex')
 
+  var swarm = this.torrents[infoHash] = new Swarm(infoHash, this)
+  cb(null, swarm)
+}
+
+Server.prototype.deleteSwarm = function (infoHash) {
+  var self = this
   process.nextTick(function () {
-    var swarm = self.torrents[infoHash] = new Swarm(infoHash, self)
-    cb(null, swarm)
+    delete self.torrents[infoHash]
   })
 }
 
 Server.prototype.getSwarm = function (infoHash, cb) {
-  var self = this
   if (Buffer.isBuffer(infoHash)) infoHash = infoHash.toString('hex')
 
-  process.nextTick(function () {
-    cb(null, self.torrents[infoHash])
-  })
+  cb(null, this.torrents[infoHash])
 }
 
 Server.prototype.onWebSocketConnection = function (socket, opts) {
@@ -531,15 +532,11 @@ Server.prototype._onWebSocketClose = function (socket) {
     socket.infoHashes.forEach(function (infoHash) {
       var swarm = self.torrents[infoHash]
       if (swarm) {
-        if (swarm.peers.length <= 1) {
-          delete self.torrents[infoHash] // Clear memory if the swarm was or will be empty
-        } else {
-          swarm.announce({
-            event: 'stopped',
-            numwant: 0,
-            peer_id: socket.peerId
-          }, noop)
-        }
+        swarm.announce({
+          event: 'stopped',
+          numwant: 0,
+          peer_id: socket.peerId
+        }, noop)
       }
     })
   }
