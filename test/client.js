@@ -1,11 +1,11 @@
-var Buffer = require('safe-buffer').Buffer
-var Client = require('bittorrent-tracker')
-var common = require('./common')
-var fixtures = require('webtorrent-fixtures')
-var test = require('tape')
+const Buffer = require('safe-buffer').Buffer
+const Client = require('bittorrent-tracker')
+const common = require('./common')
+const fixtures = require('webtorrent-fixtures')
+const test = require('tape')
 
-var peerId1 = Buffer.from('01234567890123456789')
-var port = 6881
+const peerId1 = Buffer.from('01234567890123456789')
+const port = 6881
 
 function onUpdate (t, client, server, announceUrl) {
   return function (data) {
@@ -27,7 +27,7 @@ test('client.start()', function (t) {
   t.plan(4)
 
   common.createServer(t, {}, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId1,
@@ -49,7 +49,7 @@ test('client.stop()', function (t) {
   t.plan(3)
 
   common.createServer(t, {}, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId1,
@@ -83,7 +83,7 @@ test('client.update()', function (t) {
   t.plan(4)
 
   common.createServer(t, {}, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId1,
@@ -112,7 +112,7 @@ test('client.scrape()', function (t) {
   t.plan(4)
 
   common.createServer(t, {}, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId1,
@@ -142,7 +142,7 @@ test('client.announce() with params', function (t) {
   t.plan(5)
 
   common.createServer(t, {}, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId1,
@@ -170,7 +170,7 @@ test('client `opts.getAnnounceOpts`', function (t) {
   t.plan(5)
 
   common.createServer(t, {}, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId1,

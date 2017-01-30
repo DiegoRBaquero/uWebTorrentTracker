@@ -1,16 +1,16 @@
-var Buffer = require('safe-buffer').Buffer
-var Client = require('bittorrent-tracker')
-var common = require('./common')
-var fixtures = require('webtorrent-fixtures')
-var test = require('tape')
+const Buffer = require('safe-buffer').Buffer
+const Client = require('bittorrent-tracker')
+const common = require('./common')
+const fixtures = require('webtorrent-fixtures')
+const test = require('tape')
 
-var peerId = Buffer.from('01234567890123456789')
+const peerId = Buffer.from('01234567890123456789')
 
 test('large torrent: client.start()', function (t) {
   t.plan(9)
 
   common.createServer(t, {}, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.sintel.parsedTorrent.infoHash,
       peerId: peerId,
       port: 6881,

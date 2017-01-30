@@ -1,24 +1,24 @@
-var Buffer = require('safe-buffer').Buffer
-var Client = require('bittorrent-tracker')
-var commonTest = require('./common')
-var fixtures = require('webtorrent-fixtures')
-var get = require('simple-get')
-var test = require('tape')
+const Buffer = require('safe-buffer').Buffer
+const Client = require('bittorrent-tracker')
+const commonTest = require('./common')
+const fixtures = require('webtorrent-fixtures')
+const get = require('simple-get')
+const test = require('tape')
 
-var peerId = Buffer.from('-WW0091-4ea5886ce160')
-var unknownPeerId = Buffer.from('01234567890123456789')
+const peerId = Buffer.from('-WW0091-4ea5886ce160')
+const unknownPeerId = Buffer.from('01234567890123456789')
 
 function parseHtml (html) {
-  var extractValue = new RegExp('[^v^h](\\d+)')
-  var array = html.replace('torrents', '\n').split('\n').filter(function (line) {
+  const extractValue = new RegExp('[^v^h](\\d+)')
+  const array = html.replace('torrents', '\n').split('\n').filter(function (line) {
     return line && line.trim().length > 0
   }).map(function (line) {
-    var a = extractValue.exec(line)
+    const a = extractValue.exec(line)
     if (a) {
       return parseInt(a[1], 10)
     }
   })
-  var i = 0
+  let i = 0
   return {
     torrents: array[i++],
     activeTorrents: array[i++],
@@ -35,10 +35,9 @@ function getEmptyStats (t, server, opts) {
   get.concat(opts, function (err, res, data) {
     t.error(err)
 
-    var stats = typeof data.torrents !== 'undefined' ? data : parseHtml(data.toString())
+    const stats = typeof data.torrents !== 'undefined' ? data : parseHtml(data.toString())
     t.equal(res.statusCode, 200)
     t.equal(stats.torrents, 0)
-    t.equal(stats.activeTorrents, 0)
     t.equal(stats.peersAll, 0)
     t.equal(stats.peersSeederOnly, 0)
     t.equal(stats.peersLeecherOnly, 0)
@@ -51,10 +50,10 @@ function getEmptyStats (t, server, opts) {
 }
 
 test('server: get empty stats', function (t) {
-  t.plan(11)
+  t.plan(10)
 
   commonTest.createServer(t, {}, function (server, announceUrl) {
-    var opts = {
+    const opts = {
       url: announceUrl.replace('ws', 'http') + '/stats'
     }
 
@@ -63,10 +62,10 @@ test('server: get empty stats', function (t) {
 })
 
 test('server: get empty stats with json header', function (t) {
-  t.plan(11)
+  t.plan(10)
 
   commonTest.createServer(t, {}, function (server, announceUrl) {
-    var opts = {
+    const opts = {
       url: announceUrl.replace('ws', 'http') + '/stats',
       headers: {
         'accept': 'application/json'
@@ -79,10 +78,10 @@ test('server: get empty stats with json header', function (t) {
 })
 
 test('server: get empty stats on stats.json', function (t) {
-  t.plan(11)
+  t.plan(10)
 
   commonTest.createServer(t, {}, function (server, announceUrl) {
-    var opts = {
+    const opts = {
       url: announceUrl.replace('ws', 'http') + '/stats.json',
       json: true
     }
@@ -92,11 +91,11 @@ test('server: get empty stats on stats.json', function (t) {
 })
 
 test('server: get leecher stats.json', function (t) {
-  t.plan(11)
+  t.plan(10)
 
   commonTest.createServer(t, {}, function (server, announceUrl) {
     // announce a torrent to the tracker
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId,
@@ -111,7 +110,7 @@ test('server: get leecher stats.json', function (t) {
     client.start()
 
     server.once('start', function () {
-      var opts = {
+      const opts = {
         url: announceUrl.replace('ws', 'http') + '/stats.json',
         json: true
       }
@@ -121,7 +120,6 @@ test('server: get leecher stats.json', function (t) {
 
         t.equal(res.statusCode, 200)
         t.equal(stats.torrents, 1)
-        t.equal(stats.activeTorrents, 1)
         t.equal(stats.peersAll, 1)
         t.equal(stats.peersSeederOnly, 0)
         t.equal(stats.peersLeecherOnly, 1)
@@ -136,11 +134,11 @@ test('server: get leecher stats.json', function (t) {
 })
 
 test('server: get leecher stats.json (unknown peerId)', function (t) {
-  t.plan(11)
+  t.plan(10)
 
   commonTest.createServer(t, {}, function (server, announceUrl) {
     // announce a torrent to the tracker
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: unknownPeerId,
@@ -155,7 +153,7 @@ test('server: get leecher stats.json (unknown peerId)', function (t) {
     client.start()
 
     server.once('start', function () {
-      var opts = {
+      const opts = {
         url: announceUrl.replace('ws', 'http') + '/stats.json',
         json: true
       }
@@ -165,7 +163,6 @@ test('server: get leecher stats.json (unknown peerId)', function (t) {
 
         t.equal(res.statusCode, 200)
         t.equal(stats.torrents, 1)
-        t.equal(stats.activeTorrents, 1)
         t.equal(stats.peersAll, 1)
         t.equal(stats.peersSeederOnly, 0)
         t.equal(stats.peersLeecherOnly, 1)

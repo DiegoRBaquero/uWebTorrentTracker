@@ -1,17 +1,18 @@
-module.exports = Server
+const Buffer = require('safe-buffer').Buffer
+const debug = require('debug')('uwt')
+const EventEmitter = require('events').EventEmitter
+const http = require('http')
+const inherits = require('inherits')
+const peerid = require('bittorrent-peerid')
+const series = require('run-series')
+const WebSocketServer = require('uws').Server
 
-var Buffer = require('safe-buffer').Buffer
-var debug = require('debug')('uwt')
-var EventEmitter = require('events').EventEmitter
-var http = require('http')
-var inherits = require('inherits')
-var peerid = require('bittorrent-peerid')
-var series = require('run-series')
-var WebSocketServer = require('uws').Server
+const common = require('./lib/common')
+const Swarm = require('./lib/server/swarm')
+const parseWebSocketRequest = require('./lib/server/parse-websocket')
 
-var common = require('./lib/common')
-var Swarm = require('./lib/server/swarm')
-var parseWebSocketRequest = require('./lib/server/parse-websocket')
+const NAME = require('./package.json').name
+const VERSION = require('./package.json').version
 
 inherits(Server, EventEmitter)
 
@@ -29,12 +30,12 @@ inherits(Server, EventEmitter)
  * @param {function} opts.filter    black/whitelist fn for disallowing/allowing torrents
  */
 function Server (opts) {
-  var self = this
+  const self = this
   if (!(self instanceof Server)) return new Server(opts)
   EventEmitter.call(self)
   if (!opts) opts = {}
 
-  debug('new server %s', JSON.stringify(opts))
+  debug('new server %o')
 
   self.intervalMs = opts.interval
     ? opts.interval
@@ -50,9 +51,6 @@ function Server (opts) {
   self.listening = false
   self.destroyed = false
   self.torrents = {}
-
-  self.http = null
-  self.ws = null
 
   self.http = http.createServer()
   self.http.on('error', function (err) { self._onError(err) })
@@ -79,72 +77,20 @@ function Server (opts) {
     self.http.on('request', function (req, res) {
       if (res.headersSent) return
 
-      var infoHashes = Object.keys(self.torrents)
-      var activeTorrents = 0
-      var allPeers = {}
-
-      function countPeers (filterFunction) {
-        var count = 0
-        var key
-
-        for (key in allPeers) {
-          if (allPeers.hasOwnProperty(key) && filterFunction(allPeers[key])) {
-            count++
-          }
-        }
-
-        return count
-      }
-
-      function groupByClient () {
-        var clients = {}
-        for (var key in allPeers) {
-          if (allPeers.hasOwnProperty(key)) {
-            var peer = allPeers[key]
-
-            if (!clients[peer.client.client]) {
-              clients[peer.client.client] = {}
-            }
-            var client = clients[peer.client.client]
-            // If the client is not known show 8 chars from peerId as version
-            var version = peer.client.version || new Buffer(peer.peerId, 'hex').toString().substring(0, 8)
-            if (!client[version]) {
-              client[version] = 0
-            }
-            client[version]++
-          }
-        }
-        return clients
-      }
-
-      function printClients (clients) {
-        var html = '<ul>\n'
-        for (var name in clients) {
-          if (clients.hasOwnProperty(name)) {
-            var client = clients[name]
-            for (var version in client) {
-              if (client.hasOwnProperty(version)) {
-                html += '<li><strong>' + name + '</strong> ' + version + ' : ' + client[version] + '</li>\n'
-              }
-            }
-          }
-        }
-        html += '</ul>'
-        return html
-      }
+      const infoHashes = Object.keys(self.torrents)
+      const allPeers = {}
 
       if (req.method === 'GET' && (req.url === '/stats' || req.url === '/stats.json')) {
         infoHashes.forEach(function (infoHash) {
-          var peers = self.torrents[infoHash].peers
-          var keys = peers.keys
-          if (keys.length > 0) activeTorrents++
+          const peers = self.torrents[infoHash].peers
+          const keys = peers.keys
 
           keys.forEach(function (peerId) {
             // Don't mark the peer as most recently used for stats
-            var peer = peers.peek(peerId)
+            const peer = peers.peek(peerId)
             if (peer == null) return // peers.peek() can evict the peer
 
-            if (!allPeers.hasOwnProperty(peerId)) {
+            if (!allPeers[peerId]) {
               allPeers[peerId] = {
                 ipv4: false,
                 ipv6: false,
@@ -170,29 +116,24 @@ function Server (opts) {
           })
         })
 
-        var isSeederOnly = function (peer) { return peer.seeder && peer.leecher === false }
-        var isLeecherOnly = function (peer) { return peer.leecher && peer.seeder === false }
-        var isSeederAndLeecher = function (peer) { return peer.seeder && peer.leecher }
-        var isIPv4 = function (peer) { return peer.ipv4 }
-        var isIPv6 = function (peer) { return peer.ipv6 }
-
-        var stats = {
+        const stats = {
           torrents: infoHashes.length,
-          activeTorrents: activeTorrents,
           peersAll: Object.keys(allPeers).length,
-          peersSeederOnly: countPeers(isSeederOnly),
-          peersLeecherOnly: countPeers(isLeecherOnly),
-          peersSeederAndLeecher: countPeers(isSeederAndLeecher),
-          peersIPv4: countPeers(isIPv4),
-          peersIPv6: countPeers(isIPv6),
-          clients: groupByClient()
+          peersSeederOnly: countPeers(isSeederOnly, allPeers),
+          peersLeecherOnly: countPeers(isLeecherOnly, allPeers),
+          peersSeederAndLeecher: countPeers(isSeederAndLeecher, allPeers),
+          peersIPv4: countPeers(isIPv4, allPeers),
+          peersIPv6: countPeers(isIPv6, allPeers),
+          clients: groupByClient(allPeers),
+          server: NAME,
+          serverVersion: VERSION
         }
 
         if (req.url === '/stats.json' || req.headers['accept'] === 'application/json') {
-          res.write(JSON.stringify(stats))
-          res.end()
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(stats))
         } else if (req.url === '/stats') {
-          res.end('<h1>' + stats.torrents + ' torrents (' + stats.activeTorrents + ' active)</h1>\n' +
+          res.end('<h1>' + stats.torrents + ' active torrents</h1>\n' +
             '<h2>Connected Peers: ' + stats.peersAll + '</h2>\n' +
             '<h3>Peers Seeding Only: ' + stats.peersSeederOnly + '</h3>\n' +
             '<h3>Peers Leeching Only: ' + stats.peersLeecherOnly + '</h3>\n' +
@@ -200,7 +141,8 @@ function Server (opts) {
             '<h3>IPv4 Peers: ' + stats.peersIPv4 + '</h3>\n' +
             '<h3>IPv6 Peers: ' + stats.peersIPv6 + '</h3>\n' +
             '<h3>Clients:</h3>\n' +
-            printClients(stats.clients)
+            printClients(stats.clients) +
+            '<small>Running <a href="https://www.npmjs.com/package/uwt">uwt</a> v' + VERSION + '</small>'
           )
         }
       }
@@ -215,20 +157,17 @@ function Server (opts) {
 }
 
 Server.prototype._onError = function (err) {
-  var self = this
-  self.emit('error', err)
+  this.emit('error', err)
 }
 
 Server.prototype.listen = function (/* port, onlistening */) {
-  var self = this
+  if (this._listenCalled || this.listening) throw new Error('server already listening')
+  this._listenCalled = true
 
-  if (self._listenCalled || self.listening) throw new Error('server already listening')
-  self._listenCalled = true
+  const lastArg = arguments[arguments.length - 1]
+  if (typeof lastArg === 'function') this.once('listening', lastArg)
 
-  var lastArg = arguments[arguments.length - 1]
-  if (typeof lastArg === 'function') self.once('listening', lastArg)
-
-  var port = toNumber(arguments[0]) || arguments[0] || 0
+  const port = toNumber(arguments[0]) || arguments[0] || 0
 
   debug('listen (port: %o)', port)
 
@@ -236,51 +175,50 @@ Server.prototype.listen = function (/* port, onlistening */) {
     return typeof obj === 'object' && obj !== null
   }
 
-  var httpPort = isObject(port) ? (port.http || 0) : port
+  const httpPort = isObject(port) ? (port.http || 0) : port
 
-  if (self.http) self.http.listen(httpPort)
+  if (this.http) this.http.listen(httpPort)
 }
 
 Server.prototype.close = function (cb) {
-  var self = this
   if (!cb) cb = noop
   debug('close')
 
-  self.listening = false
-  self.destroyed = true
+  this.listening = false
+  this.destroyed = true
 
-  if (self.ws) {
+  if (this.ws) {
     try {
-      self.ws.close()
+      this.ws.close()
     } catch (err) {}
   }
 
-  if (self.http) self.http.close(cb)
+  if (this.http) this.http.close(cb)
   else cb(null)
 }
 
-Server.prototype.createSwarm = function (infoHash, cb) {
+Server.prototype.createSwarm = function (infoHash) {
   if (Buffer.isBuffer(infoHash)) infoHash = infoHash.toString('hex')
 
-  var swarm = this.torrents[infoHash] = new Swarm(infoHash, this)
-  cb(null, swarm)
+  const swarm = this.torrents[infoHash] = new Swarm(infoHash, this)
+  return swarm
 }
 
 Server.prototype.deleteSwarm = function (infoHash) {
-  var self = this
+  const self = this
   process.nextTick(function () {
     delete self.torrents[infoHash]
   })
 }
 
-Server.prototype.getSwarm = function (infoHash, cb) {
+Server.prototype.getSwarm = function (infoHash) {
   if (Buffer.isBuffer(infoHash)) infoHash = infoHash.toString('hex')
 
-  cb(null, this.torrents[infoHash])
+  return this.torrents[infoHash]
 }
 
 Server.prototype.onWebSocketConnection = function (socket, opts) {
-  var self = this
+  const self = this
   if (!opts) opts = {}
   opts.trustProxy = opts.trustProxy || self._trustProxy
 
@@ -311,7 +249,7 @@ Server.prototype.onWebSocketConnection = function (socket, opts) {
 }
 
 Server.prototype._onWebSocketRequest = function (socket, opts, params) {
-  var self = this
+  const self = this
 
   try {
     params = parseWebSocketRequest(socket, opts, params)
@@ -343,7 +281,7 @@ Server.prototype._onWebSocketRequest = function (socket, opts, params) {
 
     response.action = params.action === common.ACTIONS.ANNOUNCE ? 'announce' : 'scrape'
 
-    var peers
+    let peers
     if (response.action === 'announce') {
       peers = response.peers
       delete response.peers
@@ -376,28 +314,27 @@ Server.prototype._onWebSocketRequest = function (socket, opts, params) {
     if (params.answer) {
       debug('got answer %s from %s', JSON.stringify(params.answer), params.peer_id)
 
-      self.getSwarm(params.info_hash, function (err, swarm) {
-        if (err) return self.emit('warning', err)
-        if (!swarm) {
-          return self.emit('warning', new Error('no swarm with that `info_hash`'))
-        }
-        // Mark the destination peer as recently used in cache
-        var toPeer = swarm.peers.get(params.to_peer_id)
-        if (!toPeer) {
-          return self.emit('warning', new Error('no peer with that `to_peer_id`'))
-        }
+      const swarm = self.getSwarm(params.info_hash)
 
-        toPeer.socket.send(JSON.stringify({
-          action: 'announce',
-          answer: params.answer,
-          offer_id: params.offer_id,
-          peer_id: common.hexToBinary(params.peer_id),
-          info_hash: common.hexToBinary(params.info_hash)
-        }), toPeer.socket.onSend)
-        debug('sent answer to %s from %s', toPeer.peerId, params.peer_id)
+      if (!swarm) {
+        return self.emit('warning', new Error('no swarm with that `info_hash`'))
+      }
+      // Mark the destination peer as recently used in cache
+      const toPeer = swarm.peers.get(params.to_peer_id)
+      if (!toPeer) {
+        return self.emit('warning', new Error('no peer with that `to_peer_id`'))
+      }
 
-        done()
-      })
+      toPeer.socket.send(JSON.stringify({
+        action: 'announce',
+        answer: params.answer,
+        offer_id: params.offer_id,
+        peer_id: common.hexToBinary(params.peer_id),
+        info_hash: common.hexToBinary(params.info_hash)
+      }), toPeer.socket.onSend)
+      debug('sent answer to %s from %s', toPeer.peerId, params.peer_id)
+
+      done()
     } else {
       done()
     }
@@ -412,7 +349,7 @@ Server.prototype._onWebSocketRequest = function (socket, opts, params) {
 }
 
 Server.prototype._onRequest = function (params, cb) {
-  var self = this
+  const self = this
   if (params && params.action === common.ACTIONS.CONNECT) {
     cb(null, { action: common.ACTIONS.CONNECT })
   } else if (params && params.action === common.ACTIONS.ANNOUNCE) {
@@ -425,22 +362,19 @@ Server.prototype._onRequest = function (params, cb) {
 }
 
 Server.prototype._onAnnounce = function (params, cb) {
-  var self = this
+  const self = this
 
-  self.getSwarm(params.info_hash, function (err, swarm) {
-    if (err) return cb(err)
-    if (swarm) {
-      announce(swarm)
-    } else {
-      createSwarmFilter()
-    }
-  })
+  const swarm = self.getSwarm(params.info_hash)
+
+  if (swarm) {
+    announce(swarm)
+  } else {
+    createSwarmFilter()
+  }
 
   function createSwarm () {
-    self.createSwarm(params.info_hash, function (err, swarm) {
-      if (err) return cb(err)
-      announce(swarm)
-    })
+    const swarm = self.createSwarm(params.info_hash)
+    announce(swarm)
   }
 
   function createSwarmFilter () {
@@ -473,7 +407,7 @@ Server.prototype._onAnnounce = function (params, cb) {
 }
 
 Server.prototype._onScrape = function (params, cb) {
-  var self = this
+  const self = this
 
   if (params.info_hash == null) {
     // if info_hash param is omitted, stats for all torrents are returned
@@ -482,26 +416,25 @@ Server.prototype._onScrape = function (params, cb) {
 
   series(params.info_hash.map(function (infoHash) {
     return function (cb) {
-      self.getSwarm(infoHash, function (err, swarm) {
-        if (err) return cb(err)
-        if (swarm) {
-          swarm.scrape(params, function (err, scrapeInfo) {
-            if (err) return cb(err)
-            cb(null, {
-              infoHash: infoHash,
-              complete: (scrapeInfo && scrapeInfo.complete) || 0,
-              incomplete: (scrapeInfo && scrapeInfo.incomplete) || 0
-            })
+      const swarm = self.getSwarm(infoHash)
+
+      if (swarm) {
+        swarm.scrape(params, function (err, scrapeInfo) {
+          if (err) return cb(err)
+          cb(null, {
+            infoHash: infoHash,
+            complete: (scrapeInfo && scrapeInfo.complete) || 0,
+            incomplete: (scrapeInfo && scrapeInfo.incomplete) || 0
           })
-        } else {
-          cb(null, { infoHash: infoHash, complete: 0, incomplete: 0 })
-        }
-      })
+        })
+      } else {
+        cb(null, { infoHash: infoHash, complete: 0, incomplete: 0 })
+      }
     }
   }), function (err, results) {
     if (err) return cb(err)
 
-    var response = {
+    const response = {
       action: common.ACTIONS.SCRAPE,
       files: {},
       flags: { min_request_interval: Math.ceil(self.intervalMs / 1000) }
@@ -520,17 +453,16 @@ Server.prototype._onScrape = function (params, cb) {
 }
 
 Server.prototype._onWebSocketSend = function (socket, err) {
-  var self = this
-  if (err) self._onWebSocketError(socket, err)
+  if (err) this._onWebSocketError(socket, err)
 }
 
 Server.prototype._onWebSocketClose = function (socket) {
-  var self = this
+  const self = this
   debug('websocket close %s', socket.peerId)
 
   if (socket.peerId) {
     socket.infoHashes.forEach(function (infoHash) {
-      var swarm = self.torrents[infoHash]
+      const swarm = self.torrents[infoHash]
       if (swarm) {
         swarm.announce({
           event: 'stopped',
@@ -567,11 +499,70 @@ Server.prototype._onWebSocketClose = function (socket) {
 }
 
 Server.prototype._onWebSocketError = function (socket, err) {
-  var self = this
   debug('websocket error %s', err.message || err)
-  self.emit('warning', err)
-  self._onWebSocketClose(socket)
+  this.emit('warning', err)
+  this._onWebSocketClose(socket)
 }
+
+function countPeers (filterFunction, allPeers) {
+  let count = 0
+  let key
+
+  for (key in allPeers) {
+    if (allPeers.hasOwnProperty(key) && filterFunction(allPeers[key])) {
+      count++
+    }
+  }
+
+  return count
+}
+
+function groupByClient (allPeers) {
+  const clients = {}
+  for (const key in allPeers) {
+    if (allPeers.hasOwnProperty(key)) {
+      const peer = allPeers[key]
+
+      if (!clients[peer.client.client]) {
+        clients[peer.client.client] = {}
+      }
+      const client = clients[peer.client.client]
+      // If the client is not known show 8 chars from peerId as version
+      const version = peer.client.version || new Buffer(peer.peerId, 'hex').toString().substring(0, 8)
+      if (!client[version]) {
+        client[version] = 0
+      }
+      client[version]++
+    }
+  }
+  return clients
+}
+
+function printClients (clients) {
+  let html = '<ul>\n'
+  for (const name in clients) {
+    if (clients.hasOwnProperty(name)) {
+      const client = clients[name]
+      for (const version in client) {
+        if (client.hasOwnProperty(version)) {
+          html += '<li><strong>' + name + '</strong> ' + version + ' : ' + client[version] + '</li>\n'
+        }
+      }
+    }
+  }
+  html += '</ul>\n'
+  return html
+}
+
+function isSeederOnly (peer) { return peer.seeder && peer.leecher === false }
+
+function isLeecherOnly (peer) { return peer.leecher && peer.seeder === false }
+
+function isSeederAndLeecher (peer) { return peer.seeder && peer.leecher }
+
+function isIPv4 (peer) { return peer.ipv4 }
+
+function isIPv6 (peer) { return peer.ipv6 }
 
 function toNumber (x) {
   x = Number(x)
@@ -579,3 +570,5 @@ function toNumber (x) {
 }
 
 function noop () {}
+
+module.exports = Server

@@ -1,6 +1,6 @@
 # uwt  [![npm](https://img.shields.io/npm/v/uwt.svg)](https://npmjs.org/package/uwt) [![downloads](https://img.shields.io/npm/dm/uwt.svg)](https://npmjs.org/package/uwt) [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/) [![npm](https://img.shields.io/npm/l/fb-messenger.svg)](LICENSE) 
 
-#### µWT is a simple, robust and lightweight WebTorrent tracker server implementation
+#### µWT (µWebTorrentTracker) is a simple, robust and lightweight WebTorrent tracker server implementation
 [![travis](https://img.shields.io/travis/DiegoRBaquero/uwt/master.svg)](https://travis-ci.org/DiegoRBaquero/uwt) [![bitHound Overall Score](https://www.bithound.io/github/DiegoRBaquero/uwt/badges/score.svg)](https://www.bithound.io/github/DiegoRBaquero/uwt)
 
 
@@ -15,7 +15,7 @@ participate in the torrent swarm.
 
 This module is used by [βTorrent Tracker](https://tracker.btorrent.xyz), the first community operated [WebTorrent](http://webtorrent.io) tracker.
 
-## features
+## Features
 
 - Fast & lightweight server implementation
 - Supports ipv4 & ipv6
@@ -24,22 +24,22 @@ This module is used by [βTorrent Tracker](https://tracker.btorrent.xyz), the fi
 - Comprehensive test suite (runs entirely offline, so it's reliable)
 - Tracker statistics available via web interface at `/stats` or JSON data at `/stats.json`
 
-## install
+### Requires NodeJS 6+
+
+## Install
 
 ```
 npm install uwt
 ```
 
-## usage
-
-### server
+## Usage
 
 To start a WebTorrent tracker server to track swarms of peers:
 
 ```js
-var Server = require('uwt')
+const Server = require('uwt')
 
-var server = new Server({
+const server = new Server({
   stats: true, // enable web-based statistics? [default=true]
   filter: function (infoHash, params, cb) {
     // Blacklist/whitelist function for allowing/disallowing torrents. If this option is
@@ -52,7 +52,7 @@ var server = new Server({
 
     // This example only allows one torrent.
 
-    var allowed = (infoHash === 'aaa67059ed6bd08362da625b3ae77f6f4a075aaa')
+    const allowed = (infoHash === 'aaa67059ed6bd08362da625b3ae77f6f4a075aaa')
     cb(allowed)
 
     // In addition to returning a boolean (`true` for allowed, `false` for disallowed),
@@ -105,7 +105,7 @@ server.torrents[infoHash].incomplete
 server.torrents[infoHash].peers
 ```
 
-## command line
+## CLI
 
 Easily start a tracker server:
 
@@ -128,6 +128,7 @@ $ webtorrent-tracker --help
     -p, --port [number]  change the port [default: 8000]
         --trust-proxy    trust 'x-forwarded-for' header from reverse proxy
         --interval       client announce interval (ms) [default: 120000]
+        --stats                   enable web-based statistics (default: true)
     -q, --quiet          only show error output
     -s, --silent         show no output
     -v, --version        print the current version

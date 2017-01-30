@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-var minimist = require('minimist')
-var Server = require('../')
+const minimist = require('minimist')
+const Server = require('../')
 
-var argv = minimist(process.argv.slice(2), {
+const argv = minimist(process.argv.slice(2), {
   alias: {
     h: 'help',
     p: 'port',
@@ -56,7 +56,7 @@ if (argv.help) {
 
 if (argv.silent) argv.quiet = true
 
-var server = new Server({
+const server = new Server({
   interval: argv.interval,
   stats: argv.stats,
   trustProxy: argv['trust-proxy']
@@ -83,15 +83,15 @@ server.on('stop', function (addr) {
 
 server.listen(argv.port, function () {
   if (server.ws && !argv.quiet) {
-    var wsAddr = server.http.address()
-    var wsHost = wsAddr.address !== '::' ? wsAddr.address : 'localhost'
-    var wsPort = wsAddr.port
+    const wsAddr = server.http.address()
+    const wsHost = wsAddr.address !== '::' ? wsAddr.address : 'localhost'
+    const wsPort = wsAddr.port
     console.log('Tracker: ws://' + wsHost + ':' + wsPort)
   }
   if (server.http && argv.stats && !argv.quiet) {
-    var statsAddr = server.http.address()
-    var statsHost = statsAddr.address !== '::' ? statsAddr.address : 'localhost'
-    var statsPort = statsAddr.port
+    const statsAddr = server.http.address()
+    const statsHost = statsAddr.address !== '::' ? statsAddr.address : 'localhost'
+    const statsPort = statsAddr.port
     console.log('Tracker stats: http://' + statsHost + ':' + statsPort + '/stats')
   }
 })

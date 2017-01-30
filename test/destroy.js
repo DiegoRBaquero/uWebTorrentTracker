@@ -1,17 +1,17 @@
-var Buffer = require('safe-buffer').Buffer
-var Client = require('bittorrent-tracker')
-var common = require('./common')
-var fixtures = require('webtorrent-fixtures')
-var test = require('tape')
+const Buffer = require('safe-buffer').Buffer
+const Client = require('bittorrent-tracker')
+const common = require('./common')
+const fixtures = require('webtorrent-fixtures')
+const test = require('tape')
 
-var peerId = Buffer.from('01234567890123456789')
-var port = 6881
+const peerId = Buffer.from('01234567890123456789')
+const port = 6881
 
 function testNoEventsAfterDestroy (t, serverType) {
   t.plan(1)
 
   common.createServer(t, serverType, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId,

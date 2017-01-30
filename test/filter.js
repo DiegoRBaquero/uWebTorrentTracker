@@ -1,10 +1,10 @@
-var Buffer = require('safe-buffer').Buffer
-var Client = require('bittorrent-tracker')
-var common = require('./common')
-var fixtures = require('webtorrent-fixtures')
-var test = require('tape')
+const Buffer = require('safe-buffer').Buffer
+const Client = require('bittorrent-tracker')
+const common = require('./common')
+const fixtures = require('webtorrent-fixtures')
+const test = require('tape')
 
-var peerId = Buffer.from('01234567890123456789')
+const peerId = Buffer.from('01234567890123456789')
 
 function clientDestroy (t, client, server, announceUrl) {
   t.pass('client destroyed')
@@ -37,7 +37,7 @@ function clientDestroy (t, client, server, announceUrl) {
 test('filter option blocks tracker from tracking torrent', function (t) {
   t.plan(8)
 
-  var opts = {
+  const opts = {
     filter: function (infoHash, params, cb) {
       process.nextTick(function () {
         cb(infoHash !== fixtures.alice.parsedTorrent.infoHash)
@@ -46,7 +46,7 @@ test('filter option blocks tracker from tracking torrent', function (t) {
   }
 
   common.createServer(t, opts, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.alice.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId,
@@ -76,7 +76,7 @@ test('filter option blocks tracker from tracking torrent', function (t) {
 test('filter option filter option with custom error', function (t) {
   t.plan(8)
 
-  var opts = {
+  const opts = {
     filter: function (infoHash, params, cb) {
       process.nextTick(function () {
         if (infoHash === fixtures.alice.parsedTorrent.infoHash) cb(new Error('alice blocked'))
@@ -86,7 +86,7 @@ test('filter option filter option with custom error', function (t) {
   }
 
   common.createServer(t, opts, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.alice.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId,

@@ -1,15 +1,15 @@
-var Buffer = require('safe-buffer').Buffer
-var Client = require('bittorrent-tracker')
-var common = require('./common')
-var commonTest = require('./common')
-var fixtures = require('webtorrent-fixtures')
-var test = require('tape')
+const Buffer = require('safe-buffer').Buffer
+const Client = require('bittorrent-tracker')
+const common = require('./common')
+const commonTest = require('./common')
+const fixtures = require('webtorrent-fixtures')
+const test = require('tape')
 
-var peerId = Buffer.from('01234567890123456789')
+const peerId = Buffer.from('01234567890123456789')
 
 function testSingle (t, serverType) {
   commonTest.createServer(t, serverType, function (server, announceUrl) {
-    var client = new Client({
+    const client = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId,
@@ -43,7 +43,7 @@ test('ws: single info_hash scrape', function (t) {
 
 function clientScrapeStatic (t, serverType) {
   commonTest.createServer(t, serverType, function (server, announceUrl) {
-    var client = Client.scrape({
+    const client = Client.scrape({
       announce: announceUrl,
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       wrtc: {}
@@ -68,10 +68,10 @@ test('ws: scrape using Client.scrape static method', function (t) {
 
 // Ensure the callback function gets called when an invalid url is passed
 function clientScrapeStaticInvalid (t, serverType) {
-  var announceUrl = serverType + '://invalid.lol'
+  let announceUrl = serverType + '://invalid.lol'
   if (serverType === 'http') announceUrl += '/announce'
 
-  var client = Client.scrape({
+  const client = Client.scrape({
     announce: announceUrl,
     infoHash: fixtures.leaves.parsedTorrent.infoHash,
     wrtc: {}

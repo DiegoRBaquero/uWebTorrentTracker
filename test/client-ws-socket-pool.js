@@ -1,17 +1,17 @@
-var Buffer = require('safe-buffer').Buffer
-var Client = require('bittorrent-tracker')
-var common = require('./common')
-var fixtures = require('webtorrent-fixtures')
-var test = require('tape')
+const Buffer = require('safe-buffer').Buffer
+const Client = require('bittorrent-tracker')
+const common = require('./common')
+const fixtures = require('webtorrent-fixtures')
+const test = require('tape')
 
-var peerId = Buffer.from('01234567890123456789')
-var port = 6681
+const peerId = Buffer.from('01234567890123456789')
+const port = 6681
 
 test('ensure client.destroy() callback is called with re-used websockets in socketPool', function (t) {
   t.plan(4)
 
   common.createServer(t, 'ws', function (server, announceUrl) {
-    var client1 = new Client({
+    const client1 = new Client({
       infoHash: fixtures.leaves.parsedTorrent.infoHash,
       announce: announceUrl,
       peerId: peerId,
@@ -28,7 +28,7 @@ test('ensure client.destroy() callback is called with re-used websockets in sock
     client1.once('update', function () {
       t.pass('got client1 update')
       // second ws client using same announce url will re-use the same websocket
-      var client2 = new Client({
+      const client2 = new Client({
         infoHash: fixtures.alice.parsedTorrent.infoHash, // different info hash
         announce: announceUrl,
         peerId: peerId,
