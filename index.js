@@ -8,8 +8,8 @@ const series = require('run-series')
 const WebSocketServer = require('uws').Server
 
 const common = require('./lib/common')
-const Swarm = require('./lib/server/swarm')
-const parseWebSocketRequest = require('./lib/server/parse-websocket')
+const Swarm = require('./lib/swarm')
+const parseWebSocketRequest = require('./lib/parse-websocket')
 
 const NAME = require('./package.json').name
 const VERSION = require('./package.json').version
