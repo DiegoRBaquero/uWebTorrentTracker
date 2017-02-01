@@ -41,6 +41,7 @@
     "stream",
     "torrent",
     "tracker",
+    "uwebtorrentracker",
     "webtorrent",
     "wire"
   ],
