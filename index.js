@@ -11,7 +11,7 @@ const common = require('./lib/common')
 const Swarm = require('./lib/swarm')
 const parseWebSocketRequest = require('./lib/parse-websocket')
 
-const NAME = require('./package.json').name
+const NAME = 'uWebTorrentTracker'
 const VERSION = require('./package.json').version
 
 inherits(Server, EventEmitter)
@@ -142,7 +142,7 @@ function Server (opts) {
             '<h3>IPv6 Peers: ' + stats.peersIPv6 + '</h3>\n' +
             '<h3>Clients:</h3>\n' +
             printClients(stats.clients) +
-            '<small>Running <a href="https://www.npmjs.com/package/uwt">uwt</a> v' + VERSION + '</small>'
+            '<small>Running <a href="https://www.npmjs.com/package/uwt">' + NAME + '</a> v' + VERSION + '</small>'
           )
         }
       }
