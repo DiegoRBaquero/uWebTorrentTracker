@@ -11,7 +11,7 @@ const common = require('./lib/common')
 const Swarm = require('./lib/swarm')
 const parseWebSocketRequest = require('./lib/parse-websocket')
 
-const NAME = 'uWebTorrentTracker'
+const NAME = 'µWebTorrentTracker'
 const VERSION = require('./package.json').version
 
 inherits(Server, EventEmitter)
