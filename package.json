@@ -1,6 +1,6 @@
 {
   "name": "uwt",
-  "description": "Simple, robust, WebTorrent tracker server implementation",
+  "description": "µWebTorrentTracker - Simple, robust and lightweight WebTorrent tracker server implementation",
   "version": "2.0.1",
   "author": {
     "name": "Diego Rodríguez Baquero",
@@ -11,7 +11,7 @@
     "webtorrent-tracker": "./bin/cmd.js"
   },
   "bugs": {
-    "url": "https://github.com/DiegoRBaquero/uwt/issues"
+    "url": "https://github.com/DiegoRBaquero/uWebTorrentTracker/issues"
   },
   "dependencies": {
     "bittorrent-peerid": "^1.0.2",
@@ -49,7 +49,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/DiegoRBaquero/uwt.git"
+    "url": "git://github.com/DiegoRBaquero/uWebTorrentTracker.git"
   },
   "scripts": {
     "test": "standard && faucet test/*.js"
