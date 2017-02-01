@@ -1,7 +1,7 @@
 # uwt  [![npm](https://img.shields.io/npm/v/uwt.svg)](https://npmjs.org/package/uwt) [![downloads](https://img.shields.io/npm/dm/uwt.svg)](https://npmjs.org/package/uwt) [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/) [![npm](https://img.shields.io/npm/l/fb-messenger.svg)](LICENSE) 
 
 #### µWT (µWebTorrentTracker) is a simple, robust and lightweight WebTorrent tracker server implementation
-[![travis](https://img.shields.io/travis/DiegoRBaquero/uwt/master.svg)](https://travis-ci.org/DiegoRBaquero/uwt) [![bitHound Overall Score](https://www.bithound.io/github/DiegoRBaquero/uwt/badges/score.svg)](https://www.bithound.io/github/DiegoRBaquero/uwt)
+[![travis](https://img.shields.io/travis/DiegoRBaquero/uWebTorrentTracker/master.svg)](https://travis-ci.org/DiegoRBaquero/uWebTorrentTracker) [![bitHound Overall Score](https://www.bithound.io/github/DiegoRBaquero/uWebTorrentTracker/badges/score.svg)](https://www.bithound.io/github/DiegoRBaquero/uWebTorrentTracker)
 
 
 ![tracker](https://raw.githubusercontent.com/DiegoRBaquero/uwt/master/img.png)
