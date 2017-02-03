@@ -293,8 +293,11 @@ Server.prototype._onWebSocketRequest = function (socket, opts, params) {
       response.info_hash = common.hexToBinary(params.info_hash)
     }
 
-    socket.send(JSON.stringify(response), socket.onSend)
-    debug('sent response %s to %s', JSON.stringify(response), params.peer_id)
+    // Skip sending update back for 'answer' announce messages – not needed
+    if (!params.answer) {
+      socket.send(JSON.stringify(response), socket.onSend)
+      debug('sent response %s to %s', JSON.stringify(response), params.peer_id)
+    }
 
     if (Array.isArray(params.offers)) {
       debug('got %s offers from %s', params.offers.length, params.peer_id)
