@@ -53,13 +53,13 @@ function Server (opts) {
   self.torrents = {}
 
   self.http = http.createServer()
-  self.http.on('error', function (err) { self._onError(err) })
+  self.http.on('error', err => { self._onError(err) })
   self.http.on('listening', onListening)
 
   // Add default http request handler on next tick to give user the chance to add
   // their own handler first. Handle requests untouched by user's handler.
-  process.nextTick(function () {
-    self.http.on('request', function (req, res) {
+  process.nextTick(() => {
+    self.http.on('request', (req, res) => {
       if (res.headersSent) return
       // For websocket trackers, we only need to handle the UPGRADE http method.
       // Return 404 for all other request types.
@@ -69,23 +69,23 @@ function Server (opts) {
   })
 
   self.ws = new WebSocketServer({ server: self.http })
-  self.ws.on('error', function (err) { self._onError(err) })
-  self.ws.on('connection', function (socket) { self.onWebSocketConnection(socket) })
+  self.ws.on('error', err => { self._onError(err) })
+  self.ws.on('connection', socket => { self.onWebSocketConnection(socket) })
 
   if (opts.stats !== false) {
     // Http handler for '/stats' route
-    self.http.on('request', function (req, res) {
+    self.http.on('request', (req, res) => {
       if (res.headersSent) return
 
       const infoHashes = Object.keys(self.torrents)
       const allPeers = {}
 
       if (req.method === 'GET' && (req.url === '/stats' || req.url === '/stats.json')) {
-        infoHashes.forEach(function (infoHash) {
+        infoHashes.forEach(infoHash => {
           const peers = self.torrents[infoHash].peers
           const keys = peers.keys
 
-          keys.forEach(function (peerId) {
+          keys.forEach(peerId => {
             // Don't mark the peer as most recently used for stats
             const peer = peers.peek(peerId)
             if (peer == null) return // peers.peek() can evict the peer
@@ -206,7 +206,7 @@ Server.prototype.createSwarm = function (infoHash) {
 
 Server.prototype.deleteSwarm = function (infoHash) {
   const self = this
-  process.nextTick(function () {
+  process.nextTick(() => {
     delete self.torrents[infoHash]
   })
 }
@@ -228,21 +228,21 @@ Server.prototype.onWebSocketConnection = function (socket, opts) {
 
   socket.peerId = null // as hex
   socket.infoHashes = [] // swarms that this socket is participating in
-  socket.onSend = function (err) {
+  socket.onSend = err => {
     self._onWebSocketSend(socket, err)
   }
 
-  socket.onMessageBound = function (params) {
+  socket.onMessageBound = params => {
     self._onWebSocketRequest(socket, opts, params)
   }
   socket.on('message', socket.onMessageBound)
 
-  socket.onErrorBound = function (err) {
+  socket.onErrorBound = err => {
     self._onWebSocketError(socket, err)
   }
   socket.on('error', socket.onErrorBound)
 
-  socket.onCloseBound = function () {
+  socket.onCloseBound = () => {
     self._onWebSocketClose(socket)
   }
   socket.on('close', socket.onCloseBound)
@@ -266,7 +266,7 @@ Server.prototype._onWebSocketRequest = function (socket, opts, params) {
 
   if (!socket.peerId) socket.peerId = params.peer_id // as hex
 
-  self._onRequest(params, function (err, response) {
+  self._onRequest(params, (err, response) => {
     if (self.destroyed) return
     if (err) {
       socket.send(JSON.stringify({
@@ -302,7 +302,7 @@ Server.prototype._onWebSocketRequest = function (socket, opts, params) {
     if (Array.isArray(params.offers)) {
       debug('got %s offers from %s', params.offers.length, params.peer_id)
       debug('got %s peers from swarm %s', peers.length, params.info_hash)
-      peers.forEach(function (peer, i) {
+      peers.forEach((peer, i) => {
         peer.socket.send(JSON.stringify({
           action: 'announce',
           offer: params.offers[i].offer,
@@ -360,7 +360,7 @@ Server.prototype._onWebSocketClose = function (socket) {
   debug('websocket close %s', socket.peerId)
 
   if (socket.peerId) {
-    socket.infoHashes.forEach(function (infoHash) {
+    socket.infoHashes.forEach(infoHash => {
       const swarm = self.torrents[infoHash]
       if (swarm) {
         swarm.announce({
@@ -391,7 +391,7 @@ Server.prototype._onWebSocketClose = function (socket) {
   }
   socket.onCloseBound = null
 
-  process.nextTick(function () {
+  process.nextTick(() => {
     socket.peerId = null
     socket.infoHashes = null
   })
@@ -434,7 +434,7 @@ Server.prototype._onAnnounce = function (params, cb) {
 
   function createSwarmFilter () {
     if (self._filter) {
-      self._filter(params.info_hash, params, function (allowed) {
+      self._filter(params.info_hash, params, allowed => {
         if (allowed instanceof Error) {
           cb(allowed)
         } else if (!allowed) {
@@ -450,7 +450,7 @@ Server.prototype._onAnnounce = function (params, cb) {
 
   function announce (swarm) {
     if (!params.event || params.event === 'empty') params.event = 'update'
-    swarm.announce(params, function (err, response) {
+    swarm.announce(params, (err, response) => {
       if (err) return cb(err)
 
       if (!response.action) response.action = common.ACTIONS.ANNOUNCE
@@ -469,24 +469,22 @@ Server.prototype._onScrape = function (params, cb) {
     params.info_hash = Object.keys(self.torrents)
   }
 
-  series(params.info_hash.map(function (infoHash) {
-    return function (cb) {
-      const swarm = self.getSwarm(infoHash)
+  series(params.info_hash.map(infoHash => cb => {
+    const swarm = self.getSwarm(infoHash)
 
-      if (swarm) {
-        swarm.scrape(params, function (err, scrapeInfo) {
-          if (err) return cb(err)
-          cb(null, {
-            infoHash: infoHash,
-            complete: (scrapeInfo && scrapeInfo.complete) || 0,
-            incomplete: (scrapeInfo && scrapeInfo.incomplete) || 0
-          })
+    if (swarm) {
+      swarm.scrape(params, (err, scrapeInfo) => {
+        if (err) return cb(err)
+        cb(null, {
+          infoHash: infoHash,
+          complete: (scrapeInfo && scrapeInfo.complete) || 0,
+          incomplete: (scrapeInfo && scrapeInfo.incomplete) || 0
         })
-      } else {
-        cb(null, { infoHash: infoHash, complete: 0, incomplete: 0 })
-      }
+      })
+    } else {
+      cb(null, { infoHash: infoHash, complete: 0, incomplete: 0 })
     }
-  }), function (err, results) {
+  }), (err, results) => {
     if (err) return cb(err)
 
     const response = {
@@ -495,7 +493,7 @@ Server.prototype._onScrape = function (params, cb) {
       flags: { min_request_interval: Math.ceil(self.intervalMs / 1000) }
     }
 
-    results.forEach(function (result) {
+    results.forEach(result => {
       response.files[common.hexToBinary(result.infoHash)] = {
         complete: result.complete || 0,
         incomplete: result.incomplete || 0,
