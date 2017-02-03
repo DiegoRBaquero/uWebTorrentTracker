@@ -31,7 +31,7 @@ if (argv.version) {
 }
 
 if (argv.help) {
-  console.log(function () {
+  console.log((() => {
   /*
   webtorrent-tracker - Start a webtorrent tracker server
 
@@ -50,7 +50,7 @@ if (argv.help) {
   Please report bugs!  https://github.com/DiegoRBaquero/uwt/issues
 
   */
-  }.toString().split(/\n/).slice(2, -2).join('\n'))
+  }).toString().split(/\n/).slice(2, -2).join('\n'))
   process.exit(0)
 }
 
@@ -62,26 +62,26 @@ const server = new Server({
   trustProxy: argv['trust-proxy']
 })
 
-server.on('error', function (err) {
+server.on('error', err => {
   if (!argv.silent) console.error('ERROR: ' + err.message)
 })
-server.on('warning', function (err) {
+server.on('warning', err => {
   if (!argv.quiet) console.log('WARNING: ' + err.message)
 })
-server.on('update', function (addr) {
+server.on('update', addr => {
   if (!argv.quiet) console.log('update: ' + addr)
 })
-server.on('complete', function (addr) {
+server.on('complete', addr => {
   if (!argv.quiet) console.log('complete: ' + addr)
 })
-server.on('start', function (addr) {
+server.on('start', addr => {
   if (!argv.quiet) console.log('start: ' + addr)
 })
-server.on('stop', function (addr) {
+server.on('stop', addr => {
   if (!argv.quiet) console.log('stop: ' + addr)
 })
 
-server.listen(argv.port, function () {
+server.listen(argv.port, () => {
   if (server.ws && !argv.quiet) {
     const wsAddr = server.http.address()
     const wsHost = wsAddr.address !== '::' ? wsAddr.address : 'localhost'
