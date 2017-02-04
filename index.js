@@ -349,7 +349,7 @@ class Server extends EventEmitter {
     debug('websocket close %s', socket.peerId)
 
     if (socket.peerId) {
-      socket.infoHashes.forEach(infoHash => {
+      socket.infoHashes.slice(0).forEach(infoHash => {
         const swarm = this.torrents[infoHash]
         if (swarm) {
           swarm.announce({
@@ -380,10 +380,8 @@ class Server extends EventEmitter {
     }
     socket.onCloseBound = null
 
-    process.nextTick(() => {
-      socket.peerId = null
-      socket.infoHashes = null
-    })
+    socket.peerId = null
+    socket.infoHashes = null
   }
 
   _onWebSocketError (socket, err) {
