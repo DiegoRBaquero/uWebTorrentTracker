@@ -54,6 +54,7 @@
     "url": "git://github.com/DiegoRBaquero/uWebTorrentTracker.git"
   },
   "scripts": {
-    "test": "standard && bogota test/*.js"
+    "pretest": "standard",
+    "test": "bogota"
   }
 }
