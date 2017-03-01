@@ -22,7 +22,7 @@
     "run-series": "^1.0.2",
     "safe-buffer": "^5.0.0",
     "simple-get": "^2.4.0",
-    "uws": "^0.12.0"
+    "uws": "^0.13.0"
   },
   "devDependencies": {
     "bittorrent-tracker": "^8.4.0",
