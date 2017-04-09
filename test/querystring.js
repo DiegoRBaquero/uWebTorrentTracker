@@ -3,7 +3,8 @@ const common = require('../lib/common')
 const test = require('tape')
 
 // https://github.com/feross/webtorrent/issues/196
-test('encode special chars +* in http tracker urls', function (t) {
+test('encode special chars +* in http tracker urls', t => {
+  t.plan(2)
   const q = {
     info_hash: Buffer.from('a2a15537542b22925ad10486bf7a8b2a9c42f0d1', 'hex').toString('binary')
   }
@@ -12,6 +13,4 @@ test('encode special chars +* in http tracker urls', function (t) {
 
   // sanity check that encode-decode matches up
   t.deepEqual(common.querystringParse(common.querystringStringify(q)), q)
-
-  t.end()
 })
