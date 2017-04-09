@@ -410,11 +410,9 @@ class Server extends EventEmitter {
 
     const createSwarmFilter = () => {
       if (this._filter) {
-        this._filter(params.info_hash, params, allowed => {
-          if (allowed instanceof Error) {
-            cb(allowed)
-          } else if (!allowed) {
-            cb(new Error('disallowed info_hash'))
+        this._filter(params.info_hash, params, err => {
+          if (err) {
+            cb(err)
           } else {
             createSwarm()
           }

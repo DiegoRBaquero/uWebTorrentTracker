@@ -40,7 +40,11 @@ test('filter option blocks tracker from tracking torrent', function (t) {
   const opts = {
     filter: function (infoHash, params, cb) {
       process.nextTick(function () {
-        cb(infoHash !== fixtures.alice.parsedTorrent.infoHash)
+        if (infoHash === fixtures.alice.parsedTorrent.infoHash) {
+          cb(new Error('disallowed info_hash (Alice)'))
+        } else {
+          cb(null)
+        }
       })
     }
   }
@@ -58,14 +62,14 @@ test('filter option blocks tracker from tracking torrent', function (t) {
 
     client.on('error', function (err) { t.error(err) })
     client.once('warning', function (err) {
-      t.ok(/disallowed info_hash/.test(err.message), 'got client warning')
+      t.ok(err.message.includes('disallowed info_hash (Alice)'), 'got client warning')
 
       client.destroy(clientDestroy(t, client, server, announceUrl))
     })
 
     server.removeAllListeners('warning')
     server.once('warning', function (err) {
-      t.ok(/disallowed info_hash/.test(err.message), 'got server warning')
+      t.ok(err.message.includes('disallowed info_hash (Alice)'), 'got server warning')
       t.equal(Object.keys(server.torrents).length, 0)
     })
 
@@ -79,8 +83,11 @@ test('filter option filter option with custom error', function (t) {
   const opts = {
     filter: function (infoHash, params, cb) {
       process.nextTick(function () {
-        if (infoHash === fixtures.alice.parsedTorrent.infoHash) cb(new Error('alice blocked'))
-        else cb(true)
+        if (infoHash === fixtures.alice.parsedTorrent.infoHash) {
+          cb(new Error('alice blocked'))
+        } else {
+          cb(null)
+        }
       })
     }
   }

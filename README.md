@@ -53,7 +53,11 @@ const server = new Server({
     // This example only allows one torrent.
 
     const allowed = (infoHash === 'aaa67059ed6bd08362da625b3ae77f6f4a075aaa')
-    cb(allowed)
+    if (allowed) {
+      cb(null)
+    } else {
+      cb(new Error('disallowed torrent'))
+    }
 
     // In addition to returning a boolean (`true` for allowed, `false` for disallowed),
     // you can return an `Error` object to disallow and provide a custom reason.
