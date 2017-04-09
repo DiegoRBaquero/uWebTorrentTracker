@@ -68,7 +68,7 @@ test('server: get empty stats with json header', function (t) {
     const opts = {
       url: announceUrl.replace('ws', 'http') + '/stats',
       headers: {
-        'accept': 'application/json'
+        accept: 'application/json'
       },
       json: true
     }
