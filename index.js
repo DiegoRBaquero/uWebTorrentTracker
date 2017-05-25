@@ -272,11 +272,12 @@ class Server extends EventEmitter {
   }
 
   recordStats () {
-    const stats = Object.values(this.getStats())
+    const stats = this.getStats()
+    const statsVals = Object.keys(stats).map(k => stats[k])
     const date = new Date()
 
     for (let i = 0; i < 7; i++) {
-      this.statsHistory[0].push({date: date, value: stats[0]})
+      this.statsHistory[0].push({date: date, value: statsVals[0]})
     }
   }
 
