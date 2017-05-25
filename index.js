@@ -272,7 +272,7 @@ class Server extends EventEmitter {
   }
 
   recordStats () {
-    const stats = this.getStats().values()
+    const stats = Object.values(this.getStats())
     const date = new Date()
 
     for (let i = 0; i < 7; i++) {
