@@ -284,7 +284,11 @@ class Server extends EventEmitter {
   readStatsHistory () {
     fs.readFile('./statsHistory.json', (err, history) => {
       if (err) return debug(err)
-      this.statsHistory = JSON.parse(history)
+      try {
+        this.statsHistory = JSON.parse(history)
+      } catch (e) {
+        debug(e)
+      }
     })
   }
 
