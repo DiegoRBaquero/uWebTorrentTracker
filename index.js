@@ -75,7 +75,7 @@ class Server extends EventEmitter {
 
     if (opts.stats !== false) {
       this.statsCache = {}
-      this.statsHistory = [[],[],[],[],[],[],[]]
+      this.statsHistory = [[], [], [], [], [], [], []]
 
       this.readStatsHistory()
 
