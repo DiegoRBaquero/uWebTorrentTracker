@@ -108,11 +108,11 @@ class Server extends EventEmitter {
       setTimeout(() => { // Start recording stats after 2 minutes (90 seconds timeout + 30 seconds interval)
         setInterval(() => {
           this.recordStats() // Record stats every 30 seconds
-        }, 30 * 1000).unref()
+        }, 60 * 1000).unref()
 
         setInterval(() => {
           this.writeStatsHistory()
-        }, 60 * 1000).unref() // Write stats history to file every 60 seconds
+        }, 5 * 60 * 1000).unref() // Write stats history to file every 60 seconds
       }, 90 * 1000).unref()
     }
   }
