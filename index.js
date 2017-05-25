@@ -1,6 +1,7 @@
 const Buffer = require('safe-buffer').Buffer
 const debug = require('debug')('uwt')
 const EventEmitter = require('events').EventEmitter
+const fs = require('fs')
 const http = require('http')
 const peerid = require('bittorrent-peerid')
 const series = require('run-series')
@@ -74,6 +75,10 @@ class Server extends EventEmitter {
 
     if (opts.stats !== false) {
       this.statsCache = {}
+      this.statsHistory = []
+
+      this.readStatsHistory()
+
       // Http handler for '/stats' route
       this.http.on('request', (req, res) => {
         if (res.headersSent) return
@@ -99,6 +104,14 @@ class Server extends EventEmitter {
           }
         }
       })
+
+      setInterval(() => {
+        this.recordStats()
+      }, 30 * 1000).unref()
+
+      setInterval(() => {
+        this.writeStatsHistory()
+      }, 60 * 1000).unref()
     }
   }
 
@@ -254,6 +267,23 @@ class Server extends EventEmitter {
     this.statsCache.lastUpdated = Date.now()
 
     return stats
+  }
+
+  recordStats () {
+    this.statsHistory.push(this.getStats())
+  }
+
+  readStatsHistory () {
+    fs.readFile('./statsHistory.json', (err, history) => {
+      if (err) return debug(err)
+      this.statsHistory = JSON.parse(history)
+    })
+  }
+
+  writeStatsHistory () {
+    fs.writeFile('./statsHistory.json', JSON.stringify(this.statsHistory), (err) => {
+      if (err) return debug(err)
+    })
   }
 
   _onWebSocketRequest (socket, opts, params) {
