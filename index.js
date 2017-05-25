@@ -75,7 +75,7 @@ class Server extends EventEmitter {
 
     if (opts.stats !== false) {
       this.statsCache = {}
-      this.statsHistory = []
+      this.statsHistory = [[],[],[],[],[],[],[]]
 
       this.readStatsHistory()
 
@@ -105,13 +105,15 @@ class Server extends EventEmitter {
         }
       })
 
-      setInterval(() => {
-        this.recordStats()
-      }, 30 * 1000).unref()
+      setTimeout(() => { // Start recording stats after 2 minutes (90 seconds timeout + 30 seconds interval)
+        setInterval(() => {
+          this.recordStats() // Record stats every 30 seconds
+        }, 30 * 1000).unref()
 
-      setInterval(() => {
-        this.writeStatsHistory()
-      }, 60 * 1000).unref()
+        setInterval(() => {
+          this.writeStatsHistory()
+        }, 60 * 1000).unref() // Write stats history to file every 60 seconds
+      }, 90 * 1000).unref()
     }
   }
 
@@ -270,7 +272,12 @@ class Server extends EventEmitter {
   }
 
   recordStats () {
-    this.statsHistory.push(this.getStats())
+    const stats = this.getStats().values()
+    const date = new Date()
+
+    for (let i = 0; i < 7; i++) {
+      this.statsHistory[0].push({date: date, value: stats[0]})
+    }
   }
 
   readStatsHistory () {
