@@ -277,7 +277,7 @@ class Server extends EventEmitter {
     const date = new Date()
 
     for (let i = 0; i < 7; i++) {
-      this.statsHistory[0].push({date: date, value: statsVals[0]})
+      this.statsHistory[i].push({date: date, value: statsVals[i]})
     }
   }
 
