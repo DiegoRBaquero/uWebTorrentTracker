@@ -33,7 +33,7 @@ class Server extends EventEmitter {
 
     debug('new server %o')
 
-    this.intervalMs = opts.interval
+    this.intervalMs = opts.interval !== undefined && !isNaN(opts.interval)
       ? opts.interval
       : 2 * 60 * 1000 // 2 min
 
@@ -73,61 +73,13 @@ class Server extends EventEmitter {
     this.ws.on('connection', socket => { this.onWebSocketConnection(socket) })
 
     if (opts.stats !== false) {
+      this.statsCache = {}
       // Http handler for '/stats' route
       this.http.on('request', (req, res) => {
         if (res.headersSent) return
 
-        const infoHashes = Object.keys(this.torrents)
-        const allPeers = {}
-
         if (req.method === 'GET' && (req.url === '/stats' || req.url === '/stats.json')) {
-          infoHashes.forEach(infoHash => {
-            const peers = this.torrents[infoHash].peers
-            const keys = peers.keys
-
-            keys.forEach(peerId => {
-              // Don't mark the peer as most recently used for stats
-              const peer = peers.peek(peerId)
-              if (peer == null) return // peers.peek() can evict the peer
-
-              if (!allPeers[peerId]) {
-                allPeers[peerId] = {
-                  ipv4: false,
-                  ipv6: false,
-                  seeder: false,
-                  leecher: false
-                }
-              }
-
-              if (peer.ip.indexOf(':') >= 0) {
-                allPeers[peerId].ipv6 = true
-              } else {
-                allPeers[peerId].ipv4 = true
-              }
-
-              if (peer.complete) {
-                allPeers[peerId].seeder = true
-              } else {
-                allPeers[peerId].leecher = true
-              }
-
-              allPeers[peerId].peerId = peer.peerId
-              allPeers[peerId].client = peerid(peer.peerId)
-            })
-          })
-
-          const stats = {
-            torrents: infoHashes.length,
-            peersAll: Object.keys(allPeers).length,
-            peersSeederOnly: countPeers(isSeederOnly, allPeers),
-            peersLeecherOnly: countPeers(isLeecherOnly, allPeers),
-            peersSeederAndLeecher: countPeers(isSeederAndLeecher, allPeers),
-            peersIPv4: countPeers(isIPv4, allPeers),
-            peersIPv6: countPeers(isIPv6, allPeers),
-            clients: groupByClient(allPeers),
-            server: NAME,
-            serverVersion: VERSION
-          }
+          const stats = this.getStats()
 
           if (req.url === '/stats.json' || req.headers['accept'] === 'application/json') {
             res.setHeader('Content-Type', 'application/json')
@@ -194,7 +146,9 @@ class Server extends EventEmitter {
   createSwarm (infoHash) {
     if (Buffer.isBuffer(infoHash)) infoHash = infoHash.toString('hex')
 
-    const swarm = this.torrents[infoHash] = new Swarm(infoHash, this)
+    const swarm = new Swarm(infoHash, this)
+    this.torrents[infoHash] = swarm
+
     return swarm
   }
 
@@ -238,6 +192,68 @@ class Server extends EventEmitter {
       this._onWebSocketClose(socket)
     }
     socket.on('close', socket.onCloseBound)
+  }
+
+  getStats () {
+    if (this.statsCache.lastUpdated !== undefined && Date.now() < this.statsCache.lastUpdated + 10 * 1000) {
+      return this.statsCache.value
+    }
+
+    const infoHashes = Object.keys(this.torrents)
+    const allPeers = {}
+
+    infoHashes.forEach(infoHash => {
+      const peers = this.torrents[infoHash].peers
+      const keys = peers.keys
+
+      keys.forEach(peerId => {
+        // Don't mark the peer as most recently used for stats
+        const peer = peers.peek(peerId)
+        if (peer === null) return // peers.peek() can evict the peer
+
+        if (!allPeers[peerId]) {
+          allPeers[peerId] = {
+            ipv4: false,
+            ipv6: false,
+            seeder: false,
+            leecher: false
+          }
+        }
+
+        if (peer.ip.indexOf(':') >= 0) {
+          allPeers[peerId].ipv6 = true
+        } else {
+          allPeers[peerId].ipv4 = true
+        }
+
+        if (peer.complete) {
+          allPeers[peerId].seeder = true
+        } else {
+          allPeers[peerId].leecher = true
+        }
+
+        allPeers[peerId].peerId = peer.peerId
+        allPeers[peerId].client = peerid(peer.peerId)
+      })
+    })
+
+    const stats = {
+      torrents: infoHashes.length,
+      peersAll: Object.keys(allPeers).length,
+      peersSeederOnly: countPeers(isSeederOnly, allPeers),
+      peersLeecherOnly: countPeers(isLeecherOnly, allPeers),
+      peersSeederAndLeecher: countPeers(isSeederAndLeecher, allPeers),
+      peersIPv4: countPeers(isIPv4, allPeers),
+      peersIPv6: countPeers(isIPv6, allPeers),
+      clients: groupByClient(allPeers),
+      server: NAME,
+      serverVersion: VERSION
+    }
+
+    this.statsCache.value = stats
+    this.statsCache.lastUpdated = Date.now()
+
+    return stats
   }
 
   _onWebSocketRequest (socket, opts, params) {
@@ -444,7 +460,7 @@ class Server extends EventEmitter {
   }
 
   _onScrape (params, cb) {
-    if (params.info_hash == null) {
+    if (params.info_hash === null) {
       // if info_hash param is omitted, stats for all torrents are returned
       params.info_hash = Object.keys(this.torrents)
     }
