@@ -21,10 +21,9 @@ jspm_packages
 .node_repl_history
 *.tgz
 .yarn-integrity
-
-
 test/
 img.png
 CONTRIBUTING.md
 .travis.yml
 .npmignore
+statsHistory.json
