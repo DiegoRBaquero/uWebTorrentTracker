@@ -235,7 +235,7 @@ class Server extends EventEmitter {
           }
         }
 
-        if (peer.ip.indexOf(':') >= 0) {
+        if (peer.ip !== undefined && peer.ip.indexOf(':') >= 0) {
           allPeers[peerId].ipv6 = true
         } else {
           allPeers[peerId].ipv4 = true
