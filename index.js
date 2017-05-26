@@ -224,7 +224,7 @@ class Server extends EventEmitter {
       keys.forEach(peerId => {
         // Don't mark the peer as most recently used for stats
         const peer = peers.peek(peerId)
-        if (peer === null) return // peers.peek() can evict the peer
+        if (peer === undefined) return // peers.peek() can evict the peer
 
         if (!allPeers[peerId]) {
           allPeers[peerId] = {
@@ -235,7 +235,7 @@ class Server extends EventEmitter {
           }
         }
 
-        if (peer.ip !== undefined && peer.ip.indexOf(':') >= 0) {
+        if (peer.ip.indexOf(':') >= 0) {
           allPeers[peerId].ipv6 = true
         } else {
           allPeers[peerId].ipv4 = true
