@@ -111,6 +111,12 @@ server.torrents[infoHash].peers
 
 ## CLI
 
+Install `uwt` globally
+
+```sh
+$ npm install -g uwt
+```
+
 Easily start a tracker server:
 
 ```sh
