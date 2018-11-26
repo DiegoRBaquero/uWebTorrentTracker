@@ -15,13 +15,12 @@
   },
   "dependencies": {
     "bittorrent-peerid": "^1.2.0",
-    "debug": "^3.0.0",
+    "debug": "^4.1.0",
     "lru": "^3.0.0",
     "minimist": "^1.1.1",
     "random-iterate": "^1.0.1",
     "run-series": "^1.0.2",
-    "safe-buffer": "^5.1.1",
-    "simple-get": "^2.6.0",
+    "simple-get": "^3.0.3",
     "unordered-array-remove": "^1.0.2",
     "uws": "^8.14.0"
   },
@@ -29,7 +28,7 @@
     "bittorrent-tracker": "^9.2.3",
     "bogota": "^2.0.4",
     "magnet-uri": "^5.1.7",
-    "standard": "^11.0.0",
+    "standard": "^12.0.1",
     "tape": "^4.8.0",
     "webtorrent-fixtures": "^1.5.1"
   },

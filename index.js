@@ -1,4 +1,3 @@
-const Buffer = require('safe-buffer').Buffer
 const debug = require('debug')('uwt')
 const EventEmitter = require('events').EventEmitter
 const fs = require('fs')
@@ -277,7 +276,7 @@ class Server extends EventEmitter {
     const date = new Date()
 
     for (let i = 0; i < 7; i++) {
-      this.statsHistory[i].push({date: date, value: statsVals[i]})
+      this.statsHistory[i].push({ date: date, value: statsVals[i] })
     }
   }
 
@@ -568,7 +567,7 @@ function groupByClient (allPeers) {
       }
       const client = clients[peer.client.client]
       // If the client is not known show 8 chars from peerId as version
-      const version = peer.client.version || new Buffer(peer.peerId, 'hex').toString().substring(0, 8)
+      const version = peer.client.version || Buffer.from(peer.peerId, 'hex').toString().substring(0, 8)
       if (!client[version]) {
         client[version] = 0
       }
