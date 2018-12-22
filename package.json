@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "bittorrent-peerid": "^1.2.0",
-    "debug": "^4.1.0",
+    "debug": "^4.1.1",
     "lru": "^3.0.0",
     "minimist": "^1.1.1",
     "random-iterate": "^1.0.1",
