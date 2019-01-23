@@ -89,8 +89,8 @@ class Server extends EventEmitter {
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify(stats))
           } else if (req.url === '/stats') {
-            req.setHeader('Content-Type', 'text/html; charset=utf-8')
-            req.setHeader('Cache-Control', 'max-age=30')
+            res.setHeader('Content-Type', 'text/html; charset=utf-8')
+            res.setHeader('Cache-Control', 'max-age=30')
             res.end('<h1>' + stats.torrents + ' active torrents</h1>\n' +
               '<h2>Connected Peers: ' + stats.peersAll + '</h2>\n' +
               '<h3>Peers Seeding Only: ' + stats.peersSeederOnly + '</h3>\n' +
