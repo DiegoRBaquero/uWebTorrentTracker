@@ -29,7 +29,7 @@
     "bogota": "^2.0.4",
     "magnet-uri": "^5.1.7",
     "standard": "^12.0.1",
-    "tape": "^4.8.0",
+    "tape": "^4.10.1",
     "webtorrent-fixtures": "^1.5.1"
   },
   "engines": {
