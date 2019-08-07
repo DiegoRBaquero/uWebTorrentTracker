@@ -25,7 +25,7 @@
     "uws": "^8.14.0"
   },
   "devDependencies": {
-    "bittorrent-tracker": "^9.2.3",
+    "bittorrent-tracker": "^9.13.0",
     "bogota": "^2.0.4",
     "magnet-uri": "^5.1.7",
     "standard": "^13.0.1",
