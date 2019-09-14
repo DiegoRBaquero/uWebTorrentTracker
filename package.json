@@ -28,7 +28,7 @@
     "bittorrent-tracker": "^9.2.3",
     "bogota": "^2.0.4",
     "magnet-uri": "^5.1.7",
-    "standard": "^14.0.0",
+    "standard": "^14.3.0",
     "tape": "^4.8.0",
     "webtorrent-fixtures": "^1.5.1"
   },
